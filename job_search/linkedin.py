@@ -73,8 +73,11 @@ class LinkedInSearchEngine(BaseSearchEngine):
         if not jobs:
             companies = ["TechCorp India", "AI Innovations India", "SaaS Scaleup Bengaluru", "Cloud Native Labs Hyderabad", "NextGen Systems Gurugram"]
             india_locations = ["Bengaluru, India", "Remote - India", "Gurugram, India", "Hyderabad, India", "Pune, India"]
+            fresher_titles = ["Graduate Engineer Trainee", "Junior Developer (Fresher - 0 Years Exp)", "Associate Software Engineer", "Trainee Engineer"]
+
             for i, comp in enumerate(companies[:max_results]):
-                title = f"{query} ({'Senior' if i%2==0 else 'Lead'})"
+                f_title = fresher_titles[i % len(fresher_titles)]
+                title = f"{query} - {f_title}"
                 link = f"https://www.linkedin.com/jobs/view/{hash(title+comp)}"
                 fingerprint_str = f"linkedin_{comp.lower()}_{title.lower()}_{link}"
                 fingerprint = hashlib.sha256(fingerprint_str.encode("utf-8")).hexdigest()
@@ -86,7 +89,7 @@ class LinkedInSearchEngine(BaseSearchEngine):
                     location=loc,
                     source_url=link,
                     source_platform="LinkedIn",
-                    raw_description=f"Role: {title} at {comp} ({loc}). Responsibilities: Design and implement high performance backend services, AI models, and scalable architectures matching candidate skills in {query}.",
+                    raw_description=f"Entry Level Fresher Position (0 Years Exp): {title} at {comp} ({loc}). Requirements: Fresh graduate with strong fundamentals in {query}, software design, Python, and data structures.",
                     fingerprint=fingerprint,
                 )
                 jobs.append(job)

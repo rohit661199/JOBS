@@ -25,6 +25,8 @@ class AppSettings(BaseSettings):
 
     # Paths & Operational Limits
     match_threshold: int = Field(default=70, alias="MATCH_THRESHOLD")
+    seniority_level: str = Field(default="Fresher", alias="SENIORITY_LEVEL")
+    max_experience_gap_years: int = Field(default=0, alias="MAX_EXPERIENCE_GAP_YEARS")
     daily_application_limit: int = Field(default=20, alias="DAILY_APPLICATION_LIMIT")
     browser_headless: bool = Field(default=False, alias="BROWSER_HEADLESS")
     log_level: str = Field(default="INFO", alias="LOG_LEVEL")

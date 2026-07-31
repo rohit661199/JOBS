@@ -1,6 +1,8 @@
 # Default Configuration settings for Autonomous Job Search & Application Agent
 
 preferences:
+  seniority_level: "Fresher / Entry Level" # Fresher (0 years exp)
+  max_experience_gap_years: 0
   locations:
     - "India"
     - "Bengaluru, India"
@@ -9,12 +11,11 @@ preferences:
     - "Pune, India"
     - "Noida, India"
     - "Mumbai, India"
-    - "Remote"
-  remote_preference: "remote_preferred" # remote_only, remote_preferred, hybrid, onsite
+    - "Remote - India"
+  remote_preference: "remote_preferred"
   salary_min_usd: 0
-  max_experience_gap_years: 3
   daily_application_limit: 25
-  auto_apply_enabled: false # Requires HITL approval if false
+  auto_apply_enabled: false
 
 blacklists:
   companies:
@@ -22,16 +23,18 @@ blacklists:
     - "TCS"
     - "Infosys"
   title_keywords:
+    - "Senior"
+    - "Lead"
+    - "Principal"
+    - "Architect"
+    - "Director"
+    - "Manager"
+    - "Staff"
+    - "VP"
     - "Sales Representative"
     - "Unpaid Intern"
   location_exclusions:
     - "Onsite Only"
-
-browser:
-  headless: false
-  slow_mo_ms: 100
-  timeout_ms: 30000
-  user_data_dir: "data/browser_sessions"
 
 matching:
   min_score_threshold: 70

@@ -14,8 +14,6 @@ def test_calculate_overall_score():
         domain_score=85.0,
         ats_keyword_score=75.0,
     )
-    # Expected: (80*0.25) + (90*0.25) + (70*0.20) + (85*0.15) + (75*0.15)
-    # = 20 + 22.5 + 14 + 12.75 + 11.25 = 80.5
     assert score == 80.5
 
 
@@ -23,12 +21,12 @@ def test_decision_engine_blacklist():
     """Tests decision engine rejecting blacklisted companies."""
     engine = DecisionEngine()
     job = JobListing(
-        title="Software Developer",
+        title="Junior Developer",
         company="Revature Inc",
         location="Remote",
         source_url="http://example.com/revature",
         source_platform="Indeed",
-        raw_description="Developer position.",
+        raw_description="Developer position for freshers.",
         fingerprint="fp_revature"
     )
     profile = CandidateProfile(raw_text_hash="dummy_hash")
@@ -36,3 +34,22 @@ def test_decision_engine_blacklist():
     decision, reasoning = engine.evaluate_decision(95.0, job, profile, "High score")
     assert decision == "REJECT"
     assert "blacklist" in reasoning.lower()
+
+
+def test_decision_engine_reject_high_experience_for_freshers():
+    """Tests that senior roles requiring 5+ years experience are rejected for freshers."""
+    engine = DecisionEngine()
+    job = JobListing(
+        title="Senior Python Architect",
+        company="Global Software LLC",
+        location="Remote",
+        source_url="http://example.com/senior_job",
+        source_platform="LinkedIn",
+        raw_description="Requires 5+ years of experience in system architecture.",
+        fingerprint="fp_senior_job"
+    )
+    profile = CandidateProfile(raw_text_hash="dummy_hash")
+
+    decision, reasoning = engine.evaluate_decision(95.0, job, profile, "High score")
+    assert decision == "REJECT"
+    assert "fresher" in reasoning.lower() or "experience" in reasoning.lower()
