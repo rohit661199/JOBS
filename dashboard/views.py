@@ -1,4 +1,5 @@
 """Streamlit visual component views, analytics charts, CV upload, and pipeline execution controls."""
+import asyncio
 from pathlib import Path
 import pandas as pd
 import streamlit as st
@@ -8,6 +9,7 @@ from database.repository import JobRepository
 from resume.analyzer import ResumeAnalyzer
 from utils.async_utils import run_async
 from utils.logger import logger
+from utils.salary_estimator import SalaryEstimator
 
 
 def render_header():
@@ -16,7 +18,7 @@ def render_header():
         """
         <div style="background-color:#1E1E2E;padding:20px;border-radius:12px;margin-bottom:25px;box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
             <h1 style="color:#C6A0F6;margin:0;font-family:sans-serif;">🤖 Autonomous AI Job Search & Application Agent</h1>
-            <p style="color:#A6ADC8;margin:8px 0 0 0;font-size:15px;">Resume-driven dynamic career inference & multi-platform application tracking</p>
+            <p style="color:#A6ADC8;margin:8px 0 0 0;font-size:15px;">Strict 0-Experience Fresher Job Search & Multi-Platform Application Tracking</p>
         </div>
         """,
         unsafe_allow_html=True
@@ -30,9 +32,9 @@ def render_pipeline_controls(repo: JobRepository):
     col_btn1, col_btn2 = st.columns([2, 1])
 
     with col_btn1:
-        if st.button("🚀 Run Autonomous Job Discovery & Application Pipeline", use_container_width=True, type="primary"):
+        if st.button("🚀 Run Autonomous Fresher (0 Exp) Job Search & Application Pipeline", use_container_width=True, type="primary"):
             target_resume = st.session_state.get("active_resume_path", settings.resume_path)
-            with st.spinner(f"Initiating autonomous job search & evaluation pipeline using `{target_resume}`..."):
+            with st.spinner(f"Initiating autonomous fresher job search & evaluation pipeline using `{target_resume}`..."):
                 try:
                     orchestrator = ApplicationOrchestrator(resume_path=target_resume)
                     results = run_async(orchestrator.run_full_pipeline())
@@ -40,7 +42,7 @@ def render_pipeline_controls(repo: JobRepository):
                         f"Pipeline Executed Successfully! "
                         f"Discovered **{results['jobs_discovered']}** jobs, "
                         f"Evaluated **{results['jobs_evaluated']}**, "
-                        f"Queued **{results['applications_queued']}** high-match opportunities."
+                        f"Queued **{results['applications_queued']}** 0-experience fresher opportunities."
                     )
                     st.rerun()
                 except Exception as e:
@@ -48,7 +50,7 @@ def render_pipeline_controls(repo: JobRepository):
                     st.error(f"Pipeline execution encountered an error: {e}")
 
     with col_btn2:
-        st.info("Searches LinkedIn, Indeed, Glassdoor, Naukri, Wellfound, RemoteOK, and Internshala.")
+        st.info("Searches LinkedIn, Indeed, Glassdoor, Naukri, Wellfound, RemoteOK, Internshala, Company Portals, Unstop, Freshersworld, and Cutshort.")
 
 
 def render_cv_upload_section(repo: JobRepository):
@@ -84,11 +86,11 @@ def render_cv_upload_section(repo: JobRepository):
                         st.write(f"**Inferred Careers**: {', '.join(profile.inferred_careers)}")
                         st.write(f"**Generated Search Queries**: {profile.inferred_search_queries}")
             with col_sub2:
-                if st.button("🚀 Auto-Search Jobs For Uploaded Resume"):
-                    with st.spinner("Running job search & match evaluation for uploaded resume..."):
+                if st.button("🚀 Auto-Search Fresher Jobs"):
+                    with st.spinner("Running fresher job search & match evaluation..."):
                         orchestrator = ApplicationOrchestrator(resume_path=str(saved_path))
                         results = run_async(orchestrator.run_full_pipeline())
-                        st.success(f"Discovered {results['jobs_discovered']} jobs!")
+                        st.success(f"Discovered {results['jobs_discovered']} 0-experience jobs!")
                         st.rerun()
 
     with col_up2:
@@ -131,7 +133,7 @@ def render_kpi_cards(repo: JobRepository):
     with col1:
         st.metric("Total Jobs Found", analytics.get("total_jobs_found", 0))
     with col2:
-        st.metric("High Match (APPLY)", analytics.get("high_match_jobs", 0))
+        st.metric("Fresher Match (APPLY)", analytics.get("high_match_jobs", 0))
     with col3:
         st.metric("Applications Submitted", analytics.get("total_applied", 0))
     with col4:
@@ -161,7 +163,7 @@ def render_analytics_charts(repo: JobRepository):
             st.info("No score data available yet.")
 
     with col_chart2:
-        st.write("**Discovered Jobs by Platform**")
+        st.write("**Discovered Jobs by Platform & Career Portals**")
         if not df_platforms.empty:
             st.bar_chart(df_platforms.set_index("source_platform"))
         else:
@@ -169,13 +171,13 @@ def render_analytics_charts(repo: JobRepository):
 
 
 def render_job_tables(repo: JobRepository):
-    """Displays searchable job listings, evaluations, and reasoning."""
-    st.subheader("📋 Application Pipeline & Discovered Opportunities")
+    """Displays searchable job listings, evaluations, estimated salaries, and reasoning."""
+    st.subheader("📋 Application Pipeline & Discovered Fresher Opportunities")
 
     with repo.db_manager.get_connection() as conn:
         df = pd.read_sql_query(
             """
-            SELECT j.id, j.title, j.company, j.location, j.source_platform,
+            SELECT j.id, j.title, j.company, j.location, j.source_platform, j.salary_range,
                    e.overall_match_score, e.decision, a.status as app_status,
                    e.reasoning, j.source_url
             FROM jobs j
@@ -187,11 +189,22 @@ def render_job_tables(repo: JobRepository):
         )
 
     if not df.empty:
+        # Populate estimated salary if raw salary is empty
+        df["Estimated Salary / CTC"] = df.apply(
+            lambda r: SalaryEstimator.get_salary_estimate(
+                title=str(r["title"]),
+                company=str(r["company"]),
+                location=str(r["location"]),
+                raw_salary=r["salary_range"]
+            ),
+            axis=1
+        )
+
         st.dataframe(
-            df[["id", "title", "company", "location", "source_platform", "overall_match_score", "decision", "app_status", "source_url"]],
+            df[["id", "title", "company", "location", "source_platform", "Estimated Salary / CTC", "overall_match_score", "decision", "app_status", "source_url"]],
             use_container_width=True,
             column_config={
-                "source_url": st.column_config.LinkColumn("Listing Link"),
+                "source_url": st.column_config.LinkColumn("Apply Link"),
                 "overall_match_score": st.column_config.ProgressColumn(
                     "Match Score",
                     format="%.1f",
@@ -201,16 +214,17 @@ def render_job_tables(repo: JobRepository):
             }
         )
 
-        st.markdown("### 🔍 Evaluation Reasoning Explorer")
-        selected_job_id = st.selectbox("Select Job ID to view LLM evaluation reasoning:", df["id"].tolist())
+        st.markdown("### 🔍 Fresher Evaluation Reasoning Explorer")
+        selected_job_id = st.selectbox("Select Job ID to view 0-experience fit analysis:", df["id"].tolist())
         if selected_job_id:
             row = df[df["id"] == selected_job_id].iloc[0]
             st.markdown(f"**Job Title**: {row['title']} at **{row['company']}**")
+            st.markdown(f"**Estimated Salary / CTC**: `{row['Estimated Salary / CTC']}`")
             st.markdown(f"**Match Decision**: `{row['decision']}` | **Overall Score**: `{row['overall_match_score']}`")
-            st.info(f"**LLM Reasoning**: {row['reasoning'] or 'Not evaluated yet.'}")
+            st.info(f"**LLM / Gatekeeper Reasoning**: {row['reasoning'] or 'Not evaluated yet.'}")
 
         st.subheader("📥 Export Pipeline Data")
         csv = df.to_csv(index=False).encode('utf-8')
-        st.download_button("Download Full CSV Report", csv, "job_pipeline_report.csv", "text/csv")
+        st.download_button("Download Full CSV Report", csv, "fresher_jobs_report.csv", "text/csv")
     else:
-        st.info("No job listings present in database yet. Click '🚀 Run Autonomous Job Discovery & Application Pipeline' above to start.")
+        st.info("No fresher job listings present in database yet. Click '🚀 Run Autonomous Fresher Job Search' above to discover opportunities.")

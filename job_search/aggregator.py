@@ -1,10 +1,13 @@
-"""Multi-source job aggregator executing asynchronous searches across platforms."""
+"""Multi-source job aggregator executing asynchronous searches across 11+ platforms and career drives."""
 import asyncio
 from typing import List, Optional
 from config.settings import settings
 from database.models import CandidateProfile, JobListing
 from database.repository import JobRepository
 from job_search.base_search import BaseSearchEngine
+from job_search.company_careers import CompanyCareersSearchEngine
+from job_search.cutshort import CutshortSearchEngine
+from job_search.freshersworld import FreshersworldSearchEngine
 from job_search.glassdoor import GlassdoorSearchEngine
 from job_search.indeed import IndeedSearchEngine
 from job_search.internshala import InternshalaSearchEngine
@@ -12,12 +15,13 @@ from job_search.linkedin import LinkedInSearchEngine
 from job_search.naukri import NaukriSearchEngine
 from job_search.query_generator import SearchQueryGenerator
 from job_search.remote_ok import RemoteOKSearchEngine
+from job_search.unstop import UnstopSearchEngine
 from job_search.wellfound import WellfoundSearchEngine
 from utils.logger import logger
 
 
 class JobSearchAggregator:
-    """Orchestrates job discovery queries across LinkedIn, Indeed, Glassdoor, Naukri, Wellfound, RemoteOK, and Internshala."""
+    """Orchestrates job discovery queries across 11+ search platforms and enterprise career drives."""
 
     def __init__(self, engines: Optional[List[BaseSearchEngine]] = None, repo: Optional[JobRepository] = None):
         self.engines = engines or [
@@ -27,7 +31,11 @@ class JobSearchAggregator:
             NaukriSearchEngine(),
             WellfoundSearchEngine(),
             RemoteOKSearchEngine(),
-            InternshalaSearchEngine()
+            InternshalaSearchEngine(),
+            CompanyCareersSearchEngine(),
+            UnstopSearchEngine(),
+            FreshersworldSearchEngine(),
+            CutshortSearchEngine()
         ]
         self.repo = repo or JobRepository()
 
@@ -41,14 +49,14 @@ class JobSearchAggregator:
             List of newly discovered, deduplicated JobListing objects saved to DB.
         """
         queries = SearchQueryGenerator.generate_queries(profile, settings.locations)
-        locations = settings.locations or ["Remote"]
+        locations = settings.locations or ["India"]
 
         discovered_jobs: List[JobListing] = []
         newly_saved_jobs: List[JobListing] = []
 
-        logger.info(f"Initiating job discovery cycle across {len(self.engines)} search engines...")
+        logger.info(f"Initiating multi-source discovery cycle across {len(self.engines)} search platforms & career drives...")
 
-        for query in queries[:3]:  # Run top 3 generated queries
+        for query in queries[:3]:
             for location in locations[:2]:
                 for engine in self.engines:
                     try:
