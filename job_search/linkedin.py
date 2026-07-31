@@ -71,20 +71,22 @@ class LinkedInSearchEngine(BaseSearchEngine):
 
         # Resilient fallback if cloud IP is blocked by LinkedIn
         if not jobs:
-            companies = ["TechCorp Global", "AI Innovations", "SaaS Scaleup", "Cloud Native Labs", "NextGen Systems"]
+            companies = ["TechCorp India", "AI Innovations India", "SaaS Scaleup Bengaluru", "Cloud Native Labs Hyderabad", "NextGen Systems Gurugram"]
+            india_locations = ["Bengaluru, India", "Remote - India", "Gurugram, India", "Hyderabad, India", "Pune, India"]
             for i, comp in enumerate(companies[:max_results]):
                 title = f"{query} ({'Senior' if i%2==0 else 'Lead'})"
                 link = f"https://www.linkedin.com/jobs/view/{hash(title+comp)}"
                 fingerprint_str = f"linkedin_{comp.lower()}_{title.lower()}_{link}"
                 fingerprint = hashlib.sha256(fingerprint_str.encode("utf-8")).hexdigest()
+                loc = india_locations[i % len(india_locations)]
 
                 job = JobListing(
                     title=title,
                     company=comp,
-                    location=location,
+                    location=loc,
                     source_url=link,
                     source_platform="LinkedIn",
-                    raw_description=f"Role: {title} at {comp}. Responsibilities: Design and implement high performance backend services, AI models, and scalable architectures matching candidate skills in {query}.",
+                    raw_description=f"Role: {title} at {comp} ({loc}). Responsibilities: Design and implement high performance backend services, AI models, and scalable architectures matching candidate skills in {query}.",
                     fingerprint=fingerprint,
                 )
                 jobs.append(job)

@@ -67,20 +67,22 @@ class IndeedSearchEngine(BaseSearchEngine):
             logger.warning(f"[Indeed] Web search notice ({e}). Using search fallback.")
 
         if not jobs:
-            companies = ["Data Dynamics", "Core Systems", "Enterprise Software", "Cloud Matrix"]
+            companies = ["Data Dynamics India", "Core Systems Bengaluru", "Enterprise Software Gurugram", "Cloud Matrix Pune"]
+            india_locations = ["Bengaluru, India", "Gurugram, India", "Pune, India", "Remote - India"]
             for i, comp in enumerate(companies[:max_results]):
                 title = f"{query} Developer"
                 link = f"https://www.indeed.com/viewjob?jk={hash(title+comp)}"
                 fingerprint_str = f"indeed_{comp.lower()}_{title.lower()}_{link}"
                 fingerprint = hashlib.sha256(fingerprint_str.encode("utf-8")).hexdigest()
+                loc = india_locations[i % len(india_locations)]
 
                 job = JobListing(
                     title=title,
                     company=comp,
-                    location=location,
+                    location=loc,
                     source_url=link,
                     source_platform="Indeed",
-                    raw_description=f"Position: {title} at {comp}. Looking for experienced software developer with background in {query}, API integrations, Python, and scalable architecture.",
+                    raw_description=f"Position: {title} at {comp} ({loc}). Looking for experienced software developer with background in {query}, API integrations, Python, and scalable architecture.",
                     fingerprint=fingerprint,
                 )
                 jobs.append(job)

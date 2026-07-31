@@ -2,9 +2,14 @@
 
 preferences:
   locations:
-    - "Remote"
+    - "India"
     - "Bengaluru, India"
-    - "San Francisco, CA"
+    - "Gurugram, India"
+    - "Hyderabad, India"
+    - "Pune, India"
+    - "Noida, India"
+    - "Mumbai, India"
+    - "Remote"
   remote_preference: "remote_preferred" # remote_only, remote_preferred, hybrid, onsite
   salary_min_usd: 0
   max_experience_gap_years: 3

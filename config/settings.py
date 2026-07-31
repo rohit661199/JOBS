@@ -33,7 +33,7 @@ class AppSettings(BaseSettings):
 
     # Dynamic YAML configuration settings
     yaml_config_path: str = "config/config.yaml"
-    locations: List[str] = ["Remote"]
+    locations: List[str] = ["India", "Bengaluru, India", "Remote"]
     remote_preference: str = "remote_preferred"
     blacklist_companies: List[str] = []
     blacklist_keywords: List[str] = []
