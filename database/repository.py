@@ -1,5 +1,6 @@
 """Repository pattern implementation for jobs, candidate profiles, evaluations, and applications."""
 import json
+import sqlite3
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 from database.connection import DatabaseManager, get_db
@@ -41,23 +42,26 @@ class JobRepository:
     def add_job(self, job: JobListing) -> Optional[int]:
         """Inserts a discovered job posting into the database. Returns job ID or None if duplicate."""
         sql = """
-        INSERT INTO jobs (title, company, location, source_url, source_platform, raw_description, salary_range, employment_type, posted_date, fingerprint)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ON CONFLICT(fingerprint) DO NOTHING;
+        INSERT OR IGNORE INTO jobs (title, company, location, source_url, source_platform, raw_description, salary_range, employment_type, posted_date, fingerprint)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
         """
-        with self.db_manager.get_connection() as conn:
-            cursor = conn.execute(sql, (
-                job.title, job.company, job.location, job.source_url,
-                job.source_platform, job.raw_description, job.salary_range,
-                job.employment_type, job.posted_date, job.fingerprint
-            ))
-            conn.commit()
-            if cursor.lastrowid and cursor.lastrowid > 0:
-                logger.info(f"Saved new job: '{job.title}' at {job.company}")
-                return cursor.lastrowid
-            else:
-                logger.debug(f"Duplicate job skipped: {job.title} at {job.company}")
-                return None
+        try:
+            with self.db_manager.get_connection() as conn:
+                cursor = conn.execute(sql, (
+                    job.title, job.company, job.location, job.source_url,
+                    job.source_platform, job.raw_description, job.salary_range,
+                    job.employment_type, job.posted_date, job.fingerprint
+                ))
+                conn.commit()
+                if cursor.lastrowid and cursor.lastrowid > 0:
+                    logger.info(f"Saved new job: '{job.title}' at {job.company}")
+                    return cursor.lastrowid
+                else:
+                    logger.debug(f"Duplicate job skipped: {job.title} at {job.company}")
+                    return None
+        except sqlite3.IntegrityError as e:
+            logger.debug(f"Duplicate job integrity catch: {job.title} - {e}")
+            return None
 
     def get_job_by_fingerprint(self, fingerprint: str) -> Optional[JobListing]:
         """Fetches job listing by fingerprint hash."""
