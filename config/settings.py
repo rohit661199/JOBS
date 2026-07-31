@@ -23,6 +23,20 @@ class AppSettings(BaseSettings):
     ollama_base_url: str = Field(default="http://localhost:11434", alias="OLLAMA_BASE_URL")
     ollama_model: str = Field(default="llama3.2", alias="OLLAMA_MODEL")
 
+    # Candidate Profile Details
+    candidate_name: str = Field(default="ROHIT SANKHALA", alias="CANDIDATE_NAME")
+    candidate_email: str = Field(default="", alias="CANDIDATE_EMAIL")
+    candidate_phone: str = Field(default="", alias="CANDIDATE_PHONE")
+    candidate_location: str = Field(default="Bengaluru, India", alias="CANDIDATE_LOCATION")
+    candidate_github: str = Field(default="https://github.com/rohit661199", alias="CANDIDATE_GITHUB")
+    candidate_linkedin: str = Field(default="", alias="CANDIDATE_LINKEDIN")
+
+    # Optional Platform Login Credentials
+    linkedin_email: Optional[str] = Field(default=None, alias="LINKEDIN_EMAIL")
+    linkedin_password: Optional[str] = Field(default=None, alias="LINKEDIN_PASSWORD")
+    naukri_email: Optional[str] = Field(default=None, alias="NAUKRI_EMAIL")
+    naukri_password: Optional[str] = Field(default=None, alias="NAUKRI_PASSWORD")
+
     # Paths & Operational Limits
     match_threshold: int = Field(default=70, alias="MATCH_THRESHOLD")
     seniority_level: str = Field(default="Fresher", alias="SENIORITY_LEVEL")
