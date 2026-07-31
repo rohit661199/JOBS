@@ -9,13 +9,14 @@ class DynamicFormFiller:
     """Automates standard job application form fields, multi-step inputs, file uploads, radios, and text inputs."""
 
     @staticmethod
-    async def fill_application_form(page: Page, profile: CandidateProfile, resume_path: str) -> bool:
-        """Fills standard input controls and multi-step ATS application forms.
+    async def fill_application_form(page: Page, profile: CandidateProfile, resume_path: str, cover_letter_text: str = "") -> bool:
+        """Fills standard input controls and multi-step ATS application forms for Freshers (0 Years Exp).
 
         Args:
             page: Playwright page instance.
             profile: CandidateProfile model instance.
             resume_path: Path to master resume file.
+            cover_letter_text: Custom generated cover letter text.
 
         Returns:
             True if form filling completed successfully.
@@ -56,18 +57,24 @@ class DynamicFormFiller:
                 if phone_input and await phone_input.is_visible():
                     await phone_input.fill(profile.phone)
 
-            # 4. Years of Experience (if present)
+            # 4. Years of Experience (Strictly 0 for Freshers)
             exp_input = await page.query_selector("input[name*='experience'], input[id*='experience']")
             if exp_input and await exp_input.is_visible():
-                await exp_input.fill("3")
+                await exp_input.fill("0")
 
-            # 5. Work Authorization Radios (Select 'Yes' for legal work authorization)
+            # 5. Cover Letter / Additional Notes Area
+            if cover_letter_text:
+                cl_textarea = await page.query_selector("textarea[name*='cover'], textarea[id*='cover'], textarea[name*='letter'], textarea[id*='notes']")
+                if cl_textarea and await cl_textarea.is_visible():
+                    await cl_textarea.fill(cover_letter_text)
+
+            # 6. Work Authorization Radios (Select 'Yes' for legal work authorization)
             auth_radios = await page.query_selector_all("input[type='radio'][value='1'], input[type='radio'][value='yes'], input[type='radio'][id*='authorized']")
             for radio in auth_radios[:1]:
                 if await radio.is_visible():
                     await radio.check()
 
-            # 6. Resume File Upload
+            # 7. Resume File Upload
             file_input = await page.query_selector("input[type='file']")
             if file_input:
                 r_path = Path(resume_path)

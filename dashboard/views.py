@@ -27,14 +27,14 @@ def render_header():
 
 def render_pipeline_controls(repo: JobRepository):
     """Renders one-click execution button for triggering the job search and application pipeline."""
-    st.subheader("⚡ Autonomous Agent Pipeline Controls")
+    st.subheader("⚡ Autonomous Agent Pipeline & Auto-Apply Controls")
 
-    col_btn1, col_btn2 = st.columns([2, 1])
+    col_btn1, col_btn2, col_btn3 = st.columns([2, 2, 1])
 
     with col_btn1:
-        if st.button("🚀 Run Autonomous Fresher (0 Exp) Job Search & Application Pipeline", use_container_width=True, type="primary"):
+        if st.button("🚀 Run Search & Auto-Apply Pipeline", use_container_width=True, type="primary"):
             target_resume = st.session_state.get("active_resume_path", settings.resume_path)
-            with st.spinner(f"Initiating autonomous fresher job search & evaluation pipeline using `{target_resume}`..."):
+            with st.spinner(f"Initiating search, evaluation & auto-apply pipeline using `{target_resume}`..."):
                 try:
                     orchestrator = ApplicationOrchestrator(resume_path=target_resume)
                     results = run_async(orchestrator.run_full_pipeline())
@@ -42,7 +42,7 @@ def render_pipeline_controls(repo: JobRepository):
                         f"Pipeline Executed Successfully! "
                         f"Discovered **{results['jobs_discovered']}** jobs, "
                         f"Evaluated **{results['jobs_evaluated']}**, "
-                        f"Queued **{results['applications_queued']}** 0-experience fresher opportunities."
+                        f"Auto-Applied to **{results['applications_applied']}** fresher openings with your resume & details!"
                     )
                     st.rerun()
                 except Exception as e:
@@ -50,7 +50,19 @@ def render_pipeline_controls(repo: JobRepository):
                     st.error(f"Pipeline execution encountered an error: {e}")
 
     with col_btn2:
-        st.info("Searches LinkedIn, Indeed, Glassdoor, Naukri, Wellfound, RemoteOK, Internshala, Company Portals, Unstop, Freshersworld, and Cutshort.")
+        if st.button("⚡ Auto-Apply To All Matched Jobs Now", use_container_width=True):
+            target_resume = st.session_state.get("active_resume_path", settings.resume_path)
+            with st.spinner(f"Auto-applying resume and details to all queued matched jobs..."):
+                try:
+                    orchestrator = ApplicationOrchestrator(resume_path=target_resume)
+                    applied = run_async(orchestrator.process_queued_applications())
+                    st.success(f"Successfully auto-applied resume to **{applied}** matched jobs!")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Auto-apply encountered error: {e}")
+
+    with col_btn3:
+        st.info("Automates applications on LinkedIn, Indeed, Glassdoor, Naukri, Wellfound, RemoteOK, Internshala, Company Portals, Unstop, Freshersworld, Cutshort.")
 
 
 def render_cv_upload_section(repo: JobRepository):
