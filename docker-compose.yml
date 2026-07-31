@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  jobs-agent:
+    build: .
+    container_name: autonomous_jobs_agent
+    ports:
+      - "8501:8501"
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - LLM_PROVIDER=gemini
+      - BROWSER_HEADLESS=true
+      - MATCH_THRESHOLD=70
+    volumes:
+      - ./data:/app/data
+      - ./resumes:/app/resumes
+      - ./logs:/app/logs
+    restart: unless-stopped

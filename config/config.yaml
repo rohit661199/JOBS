@@ -1,0 +1,42 @@
+# Default Configuration settings for Autonomous Job Search & Application Agent
+
+preferences:
+  locations:
+    - "Remote"
+    - "Bengaluru, India"
+    - "San Francisco, CA"
+  remote_preference: "remote_preferred" # remote_only, remote_preferred, hybrid, onsite
+  salary_min_usd: 0
+  max_experience_gap_years: 3
+  daily_application_limit: 25
+  auto_apply_enabled: false # Requires HITL approval if false
+
+blacklists:
+  companies:
+    - "Revature"
+    - "TCS"
+    - "Infosys"
+  title_keywords:
+    - "Sales Representative"
+    - "Unpaid Intern"
+  location_exclusions:
+    - "Onsite Only"
+
+browser:
+  headless: false
+  slow_mo_ms: 100
+  timeout_ms: 30000
+  user_data_dir: "data/browser_sessions"
+
+matching:
+  min_score_threshold: 70
+  weights:
+    skills: 0.25
+    tech_stack: 0.25
+    experience: 0.20
+    domain: 0.15
+    ats_keywords: 0.15
+
+notifications:
+  desktop_enabled: true
+  console_enabled: true
