@@ -1,7 +1,9 @@
-"""Streamlit visual component views, analytics charts, CV upload, and export helpers."""
+"""Streamlit visual component views, analytics charts, CV upload, and pipeline execution controls."""
+import asyncio
 from pathlib import Path
 import pandas as pd
 import streamlit as st
+from application.orchestrator import ApplicationOrchestrator
 from config.settings import settings
 from database.repository import JobRepository
 from resume.analyzer import ResumeAnalyzer
@@ -19,6 +21,34 @@ def render_header():
         """,
         unsafe_allow_html=True
     )
+
+
+def render_pipeline_controls(repo: JobRepository):
+    """Renders one-click execution button for triggering the job search and application pipeline."""
+    st.subheader("⚡ Autonomous Agent Pipeline Controls")
+
+    col_btn1, col_btn2 = st.columns([2, 1])
+
+    with col_btn1:
+        if st.button("🚀 Run Autonomous Job Discovery & Application Pipeline", use_container_width=True, type="primary"):
+            target_resume = st.session_state.get("active_resume_path", settings.resume_path)
+            with st.spinner(f"Initiating autonomous job search & evaluation pipeline using `{target_resume}`..."):
+                try:
+                    orchestrator = ApplicationOrchestrator(resume_path=target_resume)
+                    results = asyncio.run(orchestrator.run_full_pipeline())
+                    st.success(
+                        f"Pipeline Executed Successfully! "
+                        f"Discovered **{results['jobs_discovered']}** jobs, "
+                        f"Evaluated **{results['jobs_evaluated']}**, "
+                        f"Queued **{results['applications_queued']}** high-match opportunities."
+                    )
+                    st.rerun()
+                except Exception as e:
+                    logger.error(f"Pipeline execution error in UI: {e}")
+                    st.error(f"Pipeline execution encountered an error: {e}")
+
+    with col_btn2:
+        st.info("Searches LinkedIn, Indeed, Glassdoor, Naukri, Wellfound, RemoteOK, and Internshala.")
 
 
 def render_cv_upload_section(repo: JobRepository):
@@ -39,9 +69,10 @@ def render_cv_upload_section(repo: JobRepository):
             with open(saved_path, "wb") as f:
                 f.write(uploaded_file.getbuffer())
 
+            st.session_state["active_resume_path"] = str(saved_path)
             st.success(f"Resume saved to `{saved_path}`!")
 
-            if st.button("🚀 Analyze New Resume & Re-Infer Career Profile"):
+            if st.button("🔍 Analyze New Resume & Infer Careers"):
                 with st.spinner("Analyzing resume and generating search queries..."):
                     analyzer = ResumeAnalyzer(repo=repo)
                     profile = analyzer.analyze(str(saved_path), force_refresh=True)
@@ -63,6 +94,8 @@ def render_cv_upload_section(repo: JobRepository):
 
                 with open(saved_path, "w", encoding="utf-8") as f:
                     f.write(pasted_text)
+
+                st.session_state["active_resume_path"] = str(saved_path)
 
                 with st.spinner("Analyzing pasted resume text..."):
                     analyzer = ResumeAnalyzer(repo=repo)
@@ -165,4 +198,4 @@ def render_job_tables(repo: JobRepository):
         csv = df.to_csv(index=False).encode('utf-8')
         st.download_button("Download Full CSV Report", csv, "job_pipeline_report.csv", "text/csv")
     else:
-        st.info("No job listings present in database yet. Run pipeline (`python main.py --mode run`) to discover opportunities.")
+        st.info("No job listings present in database yet. Click '🚀 Run Autonomous Job Discovery & Application Pipeline' above to start.")

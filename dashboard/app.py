@@ -16,6 +16,7 @@ from dashboard.views import (
     render_header,
     render_job_tables,
     render_kpi_cards,
+    render_pipeline_controls,
 )
 
 st.set_page_config(
@@ -28,6 +29,9 @@ repo = JobRepository()
 
 render_header()
 render_kpi_cards(repo)
+
+st.markdown("---")
+render_pipeline_controls(repo)
 
 st.markdown("---")
 render_cv_upload_section(repo)
@@ -44,4 +48,4 @@ with st.sidebar:
     st.write(f"**Match Threshold**: `{settings.match_threshold}%`")
     st.write(f"**Daily Limit**: `{settings.daily_application_limit}`")
     st.write(f"**Browser Headless**: `{settings.browser_headless}`")
-    st.write(f"**Master Resume**: `{settings.resume_path}`")
+    st.write(f"**Active Resume**: `{st.session_state.get('active_resume_path', settings.resume_path)}`")
