@@ -16,6 +16,7 @@ class CutshortSearchEngine(BaseSearchEngine):
 
     async def search(self, query: str, location: str, max_results: int = 20) -> List[JobListing]:
         logger.info(f"[Cutshort] Searching startup fresher roles for '{query}'...")
+        search_url = "https://cutshort.io/jobs"
 
         cutshort_drives = [
             {"company": "Antigravity Systems", "title": "Junior AI Agent Engineer (0-1 Years Exp)", "loc": "Remote - India / Bengaluru"},
@@ -28,10 +29,10 @@ class CutshortSearchEngine(BaseSearchEngine):
             comp = item["company"]
             title = item["title"]
             loc = item["loc"]
-            link = f"https://cutshort.io/job/{hash(title+comp)}"
+            link = search_url
             sal = SalaryEstimator.get_salary_estimate(title, comp, loc)
 
-            fingerprint_str = f"cutshort_{comp.lower()}_{title.lower()}_{link}"
+            fingerprint_str = f"cutshort_{comp.lower()}_{title.lower()}_{i}"
             fingerprint = hashlib.sha256(fingerprint_str.encode("utf-8")).hexdigest()
 
             job = JobListing(

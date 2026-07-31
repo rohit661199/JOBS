@@ -1,7 +1,6 @@
 """Unstop (Dare2Compete) fresher hiring challenges discovery engine implementation."""
 import hashlib
 from typing import List
-import httpx
 from database.models import JobListing
 from job_search.base_search import BaseSearchEngine
 from utils.logger import logger
@@ -26,14 +25,14 @@ class UnstopSearchEngine(BaseSearchEngine):
         ]
 
         jobs: List[JobListing] = []
-        for i, item in enumerate(unstop_challenges[:max_results]):
+        for item in unstop_challenges[:max_results]:
             comp = item["company"]
             title = item["title"]
             loc = item["loc"]
-            link = f"https://unstop.com/competitions/{hash(title+comp)}"
+            link = "https://unstop.com/competitions"
             sal = SalaryEstimator.get_salary_estimate(title, comp, loc)
 
-            fingerprint_str = f"unstop_{comp.lower()}_{title.lower()}_{link}"
+            fingerprint_str = f"unstop_{comp.lower()}_{title.lower()}_{hash(title+comp)}"
             fingerprint = hashlib.sha256(fingerprint_str.encode("utf-8")).hexdigest()
 
             job = JobListing(

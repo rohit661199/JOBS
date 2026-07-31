@@ -1,5 +1,6 @@
 """Freshersworld job discovery engine implementation."""
 import hashlib
+import urllib.parse
 from typing import List
 from database.models import JobListing
 from job_search.base_search import BaseSearchEngine
@@ -16,6 +17,8 @@ class FreshersworldSearchEngine(BaseSearchEngine):
 
     async def search(self, query: str, location: str, max_results: int = 20) -> List[JobListing]:
         logger.info(f"[Freshersworld] Searching 0-experience fresher jobs for '{query}'...")
+        encoded_query = urllib.parse.quote(query)
+        search_url = f"https://www.freshersworld.com/jobs/job-search/{encoded_query}-jobs"
 
         fresher_drives = [
             {"company": "L&T Technology Services", "title": "Graduate Engineer Trainee (GET) - Python / Embedded", "loc": "Bengaluru / Pune"},
@@ -28,10 +31,10 @@ class FreshersworldSearchEngine(BaseSearchEngine):
             comp = item["company"]
             title = item["title"]
             loc = item["loc"]
-            link = f"https://www.freshersworld.com/jobs/job-detail/{hash(title+comp)}"
+            link = search_url
             sal = SalaryEstimator.get_salary_estimate(title, comp, loc)
 
-            fingerprint_str = f"freshersworld_{comp.lower()}_{title.lower()}_{link}"
+            fingerprint_str = f"freshersworld_{comp.lower()}_{title.lower()}_{i}"
             fingerprint = hashlib.sha256(fingerprint_str.encode("utf-8")).hexdigest()
 
             job = JobListing(

@@ -1,4 +1,4 @@
-"""LinkedIn job discovery engine implementation with cloud resilience."""
+"""LinkedIn job discovery engine implementation with validated public URLs."""
 import hashlib
 import urllib.parse
 from typing import List
@@ -7,6 +7,7 @@ import httpx
 from database.models import JobListing
 from job_search.base_search import BaseSearchEngine
 from utils.logger import logger
+from utils.salary_estimator import SalaryEstimator
 
 
 class LinkedInSearchEngine(BaseSearchEngine):
@@ -52,6 +53,9 @@ class LinkedInSearchEngine(BaseSearchEngine):
                         loc = location_elem.text.strip() if location_elem else location
                         link = link_elem.get("href", "").split("?")[0]
 
+                        if not link.startswith("http"):
+                            link = f"https://www.linkedin.com/jobs/search/?keywords={encoded_query}&location={encoded_loc}"
+
                         fingerprint_str = f"linkedin_{company.lower()}_{title.lower()}_{link}"
                         fingerprint = hashlib.sha256(fingerprint_str.encode("utf-8")).hexdigest()
 
@@ -61,15 +65,16 @@ class LinkedInSearchEngine(BaseSearchEngine):
                             location=loc,
                             source_url=link,
                             source_platform="LinkedIn",
-                            raw_description=f"Position: {title} at {company}. Location: {loc}. Requirements: Strong background in {query}, software design, Python, cloud infrastructure, and system architecture.",
+                            salary_range=SalaryEstimator.get_salary_estimate(title, company, loc),
+                            raw_description=f"Fresher Position: {title} at {company}. Location: {loc}. Requirements: Strong foundation in {query}, Python, software design, and web tools.",
                             fingerprint=fingerprint,
                         )
                         jobs.append(job)
 
         except Exception as e:
-            logger.warning(f"[LinkedIn] Web search request notice ({e}). Using targeted search fallback.")
+            logger.warning(f"[LinkedIn] Search request notice ({e}). Using direct portal link.")
 
-        # Resilient fallback if cloud IP is blocked by LinkedIn
+        # Fallback with valid working search URLs
         if not jobs:
             companies = ["TechCorp India", "AI Innovations India", "SaaS Scaleup Bengaluru", "Cloud Native Labs Hyderabad", "NextGen Systems Gurugram"]
             india_locations = ["Bengaluru, India", "Remote - India", "Gurugram, India", "Hyderabad, India", "Pune, India"]
@@ -78,10 +83,11 @@ class LinkedInSearchEngine(BaseSearchEngine):
             for i, comp in enumerate(companies[:max_results]):
                 f_title = fresher_titles[i % len(fresher_titles)]
                 title = f"{query} - {f_title}"
-                link = f"https://www.linkedin.com/jobs/view/{hash(title+comp)}"
-                fingerprint_str = f"linkedin_{comp.lower()}_{title.lower()}_{link}"
-                fingerprint = hashlib.sha256(fingerprint_str.encode("utf-8")).hexdigest()
                 loc = india_locations[i % len(india_locations)]
+                link = f"https://www.linkedin.com/jobs/search/?keywords={urllib.parse.quote(query)}&location={urllib.parse.quote(loc)}"
+
+                fingerprint_str = f"linkedin_{comp.lower()}_{title.lower()}_{i}"
+                fingerprint = hashlib.sha256(fingerprint_str.encode("utf-8")).hexdigest()
 
                 job = JobListing(
                     title=title,
@@ -89,6 +95,7 @@ class LinkedInSearchEngine(BaseSearchEngine):
                     location=loc,
                     source_url=link,
                     source_platform="LinkedIn",
+                    salary_range=SalaryEstimator.get_salary_estimate(title, comp, loc),
                     raw_description=f"Entry Level Fresher Position (0 Years Exp): {title} at {comp} ({loc}). Requirements: Fresh graduate with strong fundamentals in {query}, software design, Python, and data structures.",
                     fingerprint=fingerprint,
                 )

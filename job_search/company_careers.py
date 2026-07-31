@@ -19,11 +19,11 @@ class CompanyCareersSearchEngine(BaseSearchEngine):
         logger.info(f"[Company Careers] Discovering enterprise fresher drives for '{query}'...")
 
         enterprise_portals = [
-            {"company": "Zoho Corporation", "title": "Software Developer - Fresher 2024/2025/2026 Batch", "loc": "Chennai / Remote - India", "url": "https://careers.zoho.com/jobs/software-developer-fresher"},
-            {"company": "Freshworks", "title": "Graduate Engineer Trainee - Software Development", "loc": "Bengaluru, India", "url": "https://www.freshworks.com/company/careers/get-fresher"},
-            {"company": "TCS NQT", "title": "TCS Ninja / Digital Fresher Hiring 2024-2026", "loc": "Pan India / Bengaluru / Pune", "url": "https://www.tcs.com/careers/india/nqt-fresher-drive"},
-            {"company": "Infosys", "title": "System Engineer (Fresher 0 Exp) - Specialist Programmer", "loc": "Bengaluru / Mysuru / Remote", "url": "https://www.infosys.com/careers/fresher-hiring.html"},
-            {"company": "Cognizant", "title": "GenC Programmer Analyst Trainee (0 Years Exp)", "loc": "Hyderabad / Pune / Bengaluru", "url": "https://www.cognizant.com/in/en/careers/genc-hiring"},
+            {"company": "Zoho Corporation", "title": "Software Developer - Fresher 2024/2025/2026 Batch", "loc": "Chennai / Remote - India", "url": "https://careers.zoho.com/jobs/Careers"},
+            {"company": "Freshworks", "title": "Graduate Engineer Trainee - Software Development", "loc": "Bengaluru, India", "url": "https://www.freshworks.com/company/careers/"},
+            {"company": "TCS NQT", "title": "TCS Ninja / Digital Fresher Hiring 2024-2026", "loc": "Pan India / Bengaluru / Pune", "url": "https://www.tcs.com/careers"},
+            {"company": "Infosys", "title": "System Engineer (Fresher 0 Exp) - Specialist Programmer", "loc": "Bengaluru / Mysuru / Remote", "url": "https://www.infosys.com/careers.html"},
+            {"company": "Cognizant", "title": "GenC Programmer Analyst Trainee (0 Years Exp)", "loc": "Hyderabad / Pune / Bengaluru", "url": "https://www.cognizant.com/careers"},
         ]
 
         jobs: List[JobListing] = []
