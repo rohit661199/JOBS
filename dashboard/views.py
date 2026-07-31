@@ -1,5 +1,4 @@
 """Streamlit visual component views, analytics charts, CV upload, and pipeline execution controls."""
-import asyncio
 from pathlib import Path
 import pandas as pd
 import streamlit as st
@@ -7,6 +6,7 @@ from application.orchestrator import ApplicationOrchestrator
 from config.settings import settings
 from database.repository import JobRepository
 from resume.analyzer import ResumeAnalyzer
+from utils.async_utils import run_async
 from utils.logger import logger
 
 
@@ -35,7 +35,7 @@ def render_pipeline_controls(repo: JobRepository):
             with st.spinner(f"Initiating autonomous job search & evaluation pipeline using `{target_resume}`..."):
                 try:
                     orchestrator = ApplicationOrchestrator(resume_path=target_resume)
-                    results = asyncio.run(orchestrator.run_full_pipeline())
+                    results = run_async(orchestrator.run_full_pipeline())
                     st.success(
                         f"Pipeline Executed Successfully! "
                         f"Discovered **{results['jobs_discovered']}** jobs, "
@@ -72,15 +72,24 @@ def render_cv_upload_section(repo: JobRepository):
             st.session_state["active_resume_path"] = str(saved_path)
             st.success(f"Resume saved to `{saved_path}`!")
 
-            if st.button("🔍 Analyze New Resume & Infer Careers"):
-                with st.spinner("Analyzing resume and generating search queries..."):
-                    analyzer = ResumeAnalyzer(repo=repo)
-                    profile = analyzer.analyze(str(saved_path), force_refresh=True)
+            col_sub1, col_sub2 = st.columns(2)
+            with col_sub1:
+                if st.button("🔍 Analyze Resume & Infer Careers"):
+                    with st.spinner("Analyzing resume and generating search queries..."):
+                        analyzer = ResumeAnalyzer(repo=repo)
+                        profile = analyzer.analyze(str(saved_path), force_refresh=True)
 
-                    st.session_state["current_profile"] = profile
-                    st.success(f"Successfully analyzed profile for **{profile.full_name or 'Candidate'}**!")
-                    st.write(f"**Inferred Careers**: {', '.join(profile.inferred_careers)}")
-                    st.write(f"**Generated Search Queries**: {profile.inferred_search_queries}")
+                        st.session_state["current_profile"] = profile
+                        st.success(f"Successfully analyzed profile for **{profile.full_name or 'Candidate'}**!")
+                        st.write(f"**Inferred Careers**: {', '.join(profile.inferred_careers)}")
+                        st.write(f"**Generated Search Queries**: {profile.inferred_search_queries}")
+            with col_sub2:
+                if st.button("🚀 Auto-Search Jobs For Uploaded Resume"):
+                    with st.spinner("Running job search & match evaluation for uploaded resume..."):
+                        orchestrator = ApplicationOrchestrator(resume_path=str(saved_path))
+                        results = run_async(orchestrator.run_full_pipeline())
+                        st.success(f"Discovered {results['jobs_discovered']} jobs!")
+                        st.rerun()
 
     with col_up2:
         st.write("**Option B: Paste Raw Resume / CV Text**")
@@ -104,6 +113,12 @@ def render_cv_upload_section(repo: JobRepository):
                     st.success(f"Profile updated for **{profile.full_name or 'Candidate'}**!")
                     st.write(f"**Inferred Careers**: {', '.join(profile.inferred_careers)}")
                     st.write(f"**Generated Search Queries**: {profile.inferred_search_queries}")
+
+                    # Automatically run discovery
+                    orchestrator = ApplicationOrchestrator(resume_path=str(saved_path))
+                    results = run_async(orchestrator.run_full_pipeline())
+                    st.success(f"Discovered {results['jobs_discovered']} jobs!")
+                    st.rerun()
             else:
                 st.warning("Please paste resume text before submitting.")
 
