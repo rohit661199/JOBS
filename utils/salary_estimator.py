@@ -19,7 +19,7 @@ class SalaryEstimator:
         Returns:
             Formatted salary string (e.g., '₹6.5L - ₹10.0L LPA (Estimated)').
         """
-        if raw_salary and raw_salary.strip() and raw_salary.strip().lower() not in ["not disclosed", "n/a", "none"]:
+        if isinstance(raw_salary, str) and raw_salary.strip() and raw_salary.strip().lower() not in ["not disclosed", "n/a", "none", "nan"]:
             return raw_salary.strip()
 
         t_lower = title.lower()
